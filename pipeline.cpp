@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include "instruction_read.h"
+#include "memory_read.h"
 #include "util.h"
 typedef long long ll;
 using namespace std;
@@ -98,7 +99,7 @@ int main(int argc, char *argv[]){
     Pipeline MIPS;
     vector<string> instructionMemory = instructionsFileToVector(argv[1]);
     vector<int> registerFile(32);
-    vector<int> Memory;
+    vector<int> Memory = memoryFileToVector(argv[2]);
     while(MIPS.instructionRead < instructionMemory.size()){
         if(MIPS.clock > 3){
             handleWB(MIPS, registerFile);
