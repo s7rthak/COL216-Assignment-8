@@ -1,10 +1,25 @@
 #include <bits/stdc++.h>
+#include <execinfo.h>
+#include <unistd.h>
 #include "instruction_read.hpp"
 #include "memory_read.hpp"
 #include "util.hpp"
 #include "pipeline.hpp"
 typedef long long ll;
 using namespace std;
+
+void handler(int sig) {
+    void *array[10];
+    size_t size;
+
+    // get void*'s for all entries on the stack
+    size = backtrace(array, 10);
+
+    // print out all the frames to stderr
+    fprintf(stderr, "Error: signal %d:\n", sig);
+    backtrace_symbols_fd(array, size, STDERR_FILENO);
+    exit(1);
+}
 
 void handleIF(Pipeline& mips, vector<string>& inst_mem){
     PipeStage& IF = mips.instructionFetch;
@@ -143,6 +158,8 @@ void checkForStall(Pipeline& mips){
         mips.isStalled = true;
     }else if((WB.Rd == EX.Rs || WB.Rd == EX.Rt) && WB.RegWrite){        // data hazard
         mips.isStalled = true;
+    }else if(WB.Rt == EX.Rs && WB.MemtoReg){                            // data hazard
+        mips.isStalled = true;
     }else if(IFop == 4 || IFop == 5 || IFop == 6 || IFop == 7){         // control hazard
         mips.isStalled = true;
     }else if(IDop == 4 || IDop == 5 || IDop == 6 || IDop == 7){         // control hazard
@@ -159,17 +176,20 @@ void checkForStall(Pipeline& mips){
 }
 
 int main(int argc, char *argv[]){
+    // signal(SIGSEGV, handler);
     Pipeline MIPS;
     vector<string> instructionMemory = instructionsFileToVector(argv[1]);
     vector<int> registerFile(32);
     vector<int> Memory = memoryFileToVector(argv[2]);
-    while(MIPS.instructionRead < instructionMemory.size()){
-        checkForStall(MIPS);
-        handleWB(MIPS, registerFile);
-        handleMEM(MIPS, Memory);
-        handleEX(MIPS);
-        handleID(MIPS, registerFile);
-        handleIF(MIPS, instructionMemory);
-        MIPS.clock++;
-    }
+    handleIF(MIPS, instructionMemory);
+    // while(MIPS.instructionRead < (signed)instructionMemory.size()){
+    //     checkForStall(MIPS);
+    //     // handleWB(MIPS, registerFile);
+    //     // handleMEM(MIPS, Memory);
+    //     // handleEX(MIPS);
+    //     // handleID(MIPS, registerFile);
+    //     handleIF(MIPS, instructionMemory);
+    //     MIPS.clock++;
+    //     cout<<"done";
+    // }
 }
