@@ -1,30 +1,10 @@
 #include <bits/stdc++.h>
-#include "instruction_read.h"
-#include "memory_read.h"
-#include "util.h"
+#include "instruction_read.hpp"
+#include "memory_read.hpp"
+#include "util.hpp"
+#include "pipeline.hpp"
 typedef long long ll;
 using namespace std;
-
-class PipeStage{
-    public:
-        bool RegDst, ALUOp1, ALUOp0, ALUSrc, Jump, Branch, MemRead, MemWrite, RegWrite, MemtoReg;
-        int RegisterRd, RegisterRs, RegisterRt;
-        int Rd, Rs, Rt;
-        int PC;
-        string instruction;
-        int WriteBack;
-        int writeMem, readMem;
-        bool toDo;
-        int offset = 0;
-};
-
-class Pipeline{
-    public:   
-        PipeStage instructionFetch, instructionDecode, executeInstruction, memoryAccess, writeBack;
-        int clock = 0;
-        int instructionRead = -4;
-        bool isStalled;
-};
 
 void handleIF(Pipeline& mips, vector<string>& inst_mem){
     PipeStage& IF = mips.instructionFetch;
@@ -159,9 +139,9 @@ void checkForStall(Pipeline& mips){
     int IFop = stringToDecimal(IF.instruction.substr(0, 6));
     int IDop = stringToDecimal(ID.instruction.substr(0, 6));
     int EXop = stringToDecimal(EX.instruction.substr(0, 6));
-    if(MEM.Rd == EX.Rs || MEM.Rd == EX.Rt){                             // data hazard
+    if((EX.Rd == ID.Rs || EX.Rd == ID.Rt) && EX.RegWrite){              // data hazard
         mips.isStalled = true;
-    }else if(WB.Rd == EX.Rs || WB.Rd == EX.Rt){                         // data hazard
+    }else if((WB.Rd == EX.Rs || WB.Rd == EX.Rt) && WB.RegWrite){        // data hazard
         mips.isStalled = true;
     }else if(IFop == 4 || IFop == 5 || IFop == 6 || IFop == 7){         // control hazard
         mips.isStalled = true;
@@ -173,6 +153,8 @@ void checkForStall(Pipeline& mips){
         mips.isStalled = true;
     }else if(IDop == 2){                                                // control hazard
         mips.isStalled = true;
+    }else{
+        mips.isStalled = false;
     }
 }
 
@@ -188,7 +170,6 @@ int main(int argc, char *argv[]){
         handleEX(MIPS);
         handleID(MIPS, registerFile);
         handleIF(MIPS, instructionMemory);
-        MIPS.isStalled = false;
         MIPS.clock++;
     }
 }
