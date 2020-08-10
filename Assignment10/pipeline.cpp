@@ -213,7 +213,7 @@ void checkForStall(Pipeline& mips){
     }
     if((EX.Rd == ID.Rs || EX.Rd == ID.Rt) && EX.RegWrite){              // data hazard
         mips.isStalled = true;
-    }if(EX.MemRead && (EX.Rd == ID.Rs || EX.Rd == ID.Rt)){               // taking Rs = Rs1 and Rt = Rs2 according to book
+    }if(EX.MemRead && (EX.Rd == ID.Rs || EX.Rd == ID.Rt)){              // taking Rs = Rs1 and Rt = Rs2 according to book
         mips.isStalled = true;                                          // data hazard after load needs stalling as it can't be solved by forwarding
     }else if(IFop == 4 || IFop == 5 || IFop == 6 || IFop == 7){         // control hazard
         mips.isStalled = true;
@@ -249,20 +249,26 @@ int main(int argc, char *argv[]){
     registerFile[1] = 2;
     int i=0;
     while(MIPS.instructionRead < (signed)instructionMemory.size()){
+        string pipe;
         checkForStall(MIPS);
         if(MIPS.variabledelay && MIPS.lengthforvariabledelay){
             MIPS.isStalled = true;
             MIPS.lengthforvariabledelay--;
         }else{
-            MIPS.checkforvariabledelays  =false;
+            MIPS.checkforvariabledelays = false;
             MIPS.variabledelay = false;
         }
         handleWB(MIPS, registerFile);
+        pipe = to_string(MIPS.writeBack.PC/4) + " " + pipe;
         handleMEM(MIPS, Memory);
+        pipe = to_string(MIPS.memoryAccess.PC/4) + " " + pipe;
         handleEX(MIPS);
+        pipe = to_string(MIPS.executeInstruction.PC/4) + " " + pipe;
         handleID(MIPS, registerFile);
+        pipe = to_string(MIPS.instructionDecode.PC/4) + " " + pipe;
         handleIF(MIPS, instructionMemory);
-        
+        pipe = to_string(MIPS.instructionFetch.PC/4) + " " + pipe;
+
         for(int i=0; i<registerFile.size(); i++)
         {
             cout << "$" << i << " " << registerFile[i] << endl;
@@ -274,8 +280,7 @@ int main(int argc, char *argv[]){
             cout << "Memory[" << i << "]: " << Memory[i] << endl;
         }
         cout << "Pipeline:"  << "\n";
-        cout << MIPS.instructionFetch.PC/4 << " " << MIPS.instructionDecode.PC/4 << " " << MIPS.executeInstruction.PC/4 << " " << MIPS.memoryAccess.PC/4
-         << " " << MIPS.writeBack.PC/4 << endl;
+        cout << pipe << "\n\n";
         MIPS.clock++;
     }
 

@@ -214,12 +214,18 @@ int main(int argc, char *argv[]){
     registerFile[1] = 2;
     int i=0;
     while(MIPS.instructionRead < (signed)instructionMemory.size()){
+        string pipe;
         checkForStall(MIPS);
         handleWB(MIPS, registerFile);
+        pipe = to_string(MIPS.writeBack.PC/4) + " " + pipe;
         handleMEM(MIPS, Memory);
+        pipe = to_string(MIPS.memoryAccess.PC/4) + " " + pipe;
         handleEX(MIPS);
+        pipe = to_string(MIPS.executeInstruction.PC/4) + " " + pipe;
         handleID(MIPS, registerFile);
+        pipe = to_string(MIPS.instructionDecode.PC/4) + " " + pipe;
         handleIF(MIPS, instructionMemory);
+        pipe = to_string(MIPS.instructionFetch.PC/4) + " " + pipe;
 
         for(int i=0; i<registerFile.size(); i++)
         {
@@ -232,8 +238,7 @@ int main(int argc, char *argv[]){
             cout << "Memory[" << i << "]: " << Memory[i] << endl;
         }
         cout << "Pipeline:"  << "\n";
-        cout << MIPS.instructionFetch.PC/4 << " " << MIPS.instructionDecode.PC/4 << " " << MIPS.executeInstruction.PC/4 << " " << MIPS.memoryAccess.PC/4
-         << " " << MIPS.writeBack.PC/4 << endl;
+        cout << pipe << "\n\n";
         MIPS.clock++;
     }
 
