@@ -25,6 +25,41 @@ TEST(MIPS, Stall_On_Data_Hazard_3){
     ASSERT_EQ(P.isStalled, true);
 }
 
+TEST(MIPS, Stall_On_Control_Hazard_1){
+    Pipeline P;
+    P.instructionFetch.instruction = "00010000000000000000000000000000";
+    checkForStall(P);
+    ASSERT_EQ(P.isStalled, true);
+}
+
+TEST(MIPS, Stall_On_Control_Hazard_2){
+    Pipeline P;
+    P.instructionDecode.instruction = "00010100000000000000000000000000";
+    checkForStall(P);
+    ASSERT_EQ(P.isStalled, true);
+}
+
+TEST(MIPS, Stall_On_Control_Hazard_3){
+    Pipeline P;
+    P.executeInstruction.instruction = "00011000000000000000000000000000";
+    checkForStall(P);
+    ASSERT_EQ(P.isStalled, true);
+}
+
+TEST(MIPS, Stall_On_Control_Hazard_4){
+    Pipeline P;
+    P.instructionFetch.instruction = "00001000000000000000000000000000";
+    checkForStall(P);
+    ASSERT_EQ(P.isStalled, true);
+}
+
+TEST(MIPS, Stall_On_Control_Hazard_5){
+    Pipeline P;
+    P.instructionDecode.instruction = "00001000000000000000000000000000";
+    checkForStall(P);
+    ASSERT_EQ(P.isStalled, true);
+}
+
 int main(int argc, char **argv) {
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
