@@ -1,1 +1,10 @@
 
+Test Case 5: Checks forwarding for multiple options.
+
+Test Case 1: Checks all basic tests for R-type, jump and Branch,
+
+Test Case 2: Checks jr and jal working.
+
+Test Case 3: Tests rest of the operations such as bgtz etc.
+
+Test Case 4: Some more instructions.
