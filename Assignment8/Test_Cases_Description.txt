@@ -1,2 +1,7 @@
 
 1.txt: Checks all R-type, lw/sw, branch and jump instruction. checks for stall in case of jump.
+2.txt: A general test-case which integrates all types of instructions and stalls
+3.txt: A general test-case which integrates all types of instructions and stalls
+4.txt: A general test-case which integrates all types of instructions and stalls
+5.txt: Specific test-case to test data-hazard
+6.txt: Specific test-case to test data-hazard
