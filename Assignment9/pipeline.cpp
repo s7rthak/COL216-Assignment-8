@@ -50,7 +50,7 @@ void handleIF(Pipeline& mips, vector<string>& inst_mem){
         }
         mips.checkstallincr = false;
     }
-    mips.instructionDecode = mips.instructionFetch;
+    // mips.instructionDecode = mips.instructionFetch;
 }
 
 void handleID(Pipeline& mips, vector<int>& registers){
@@ -98,7 +98,7 @@ void handleID(Pipeline& mips, vector<int>& registers){
             registers[31] = ID.PC + 4;
         }
     }
-    mips.executeInstruction = mips.instructionDecode;
+    // mips.executeInstruction = mips.instructionDecode;
 }
 
 void handleEX(Pipeline& mips){
@@ -108,13 +108,18 @@ void handleEX(Pipeline& mips){
     if(EX.toDo){
         if(mips.ForwardA == 10){
             EX.RegisterRs = MEM.RegisterRs;
+            mips.ForwardA = 00;
         }else if(mips.ForwardA == 01){
             EX.RegisterRs = WB.RegisterRs;
+            mips.ForwardA = 00;
         }
         if(mips.ForwardB == 10){
+            cout << EX.RegisterRt << " " << MEM.RegisterRs << endl;
             EX.RegisterRt = MEM.RegisterRs;
+            mips.ForwardB = 00;
         }else if(mips.ForwardB == 01){
             EX.RegisterRs = WB.RegisterRs;
+            mips.ForwardB = 00;
         }
         if(EX.ALUOp1 && !EX.ALUOp0){                                    // R-type
             int func = stringToDecimal(EX.instruction.substr(26, 6));
@@ -162,7 +167,7 @@ void handleEX(Pipeline& mips){
             EX.RegisterRs = EX.RegisterRs + offset;
         }
     }
-    mips.memoryAccess = mips.executeInstruction;
+    // mips.memoryAccess = mips.executeInstruction;
 }
 
 void handleMEM(Pipeline& mips, vector<int>& memory){
@@ -174,7 +179,7 @@ void handleMEM(Pipeline& mips, vector<int>& memory){
             memory[MEM.RegisterRs] = MEM.RegisterRt;
         }
     }
-    mips.writeBack = mips.memoryAccess;
+    // mips.writeBack = mips.memoryAccess;
 }
 
 void handleWB(Pipeline& mips, vector<int>& registers){
@@ -207,11 +212,11 @@ void checkForStall(Pipeline& mips){
     {
         mips.ForwardB = 10;
     }
-    if(WB.RegWrite && WB.Rd == EX.Rs && WB.Rd != 0 && !(MEM.RegWrite && MEM.Rd != 0 && (MEM.Rd != EX.Rs)))
+    if(WB.RegWrite && WB.Rd == EX.Rs && WB.Rd != 0 && !(MEM.RegWrite && MEM.Rd != 0 && (MEM.Rd == EX.Rs)))
     {
         mips.ForwardA = 01;
     }
-    if(WB.RegWrite && WB.Rd == EX.Rt && WB.Rd != 0 && !(MEM.RegWrite && MEM.Rd != 0 && (MEM.Rd != EX.Rt)))
+    if(WB.RegWrite && WB.Rd == EX.Rt && WB.Rd != 0 && !(MEM.RegWrite && MEM.Rd != 0 && (MEM.Rd == EX.Rt)))
     {
         mips.ForwardB = 01;
     }
@@ -255,6 +260,11 @@ int main(int argc, char *argv[]){
         handleIF(MIPS, instructionMemory);
         pipe = to_string(MIPS.instructionFetch.PC/4) + " " + pipe;
 
+
+        MIPS.writeBack = MIPS.memoryAccess;
+        MIPS.memoryAccess = MIPS.executeInstruction;
+        MIPS.executeInstruction = MIPS.instructionDecode;
+        MIPS.instructionDecode = MIPS.instructionFetch;
         for(int i=0; i<registerFile.size(); i++)
         {
             cout << "$" << i << " " << registerFile[i] << endl;
@@ -288,6 +298,10 @@ int main(int argc, char *argv[]){
         pipe = to_string(MIPS.instructionDecode.PC/4) + " " + pipe;
         pipe = to_string(MIPS.instructionFetch.PC/4) + " " + pipe;
 
+        MIPS.writeBack = MIPS.memoryAccess;
+        MIPS.memoryAccess = MIPS.executeInstruction;
+        MIPS.executeInstruction = MIPS.instructionDecode;
+        MIPS.instructionDecode = MIPS.instructionFetch;
         for(int i=0; i<registerFile.size(); i++)
         {
             cout << "$" << i << " " << registerFile[i] << endl;
