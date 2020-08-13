@@ -22,6 +22,7 @@ class Pipeline{
         PipeStage instructionFetch, instructionDecode, executeInstruction, memoryAccess, writeBack;
         int clock = 0;
         int instructionRead = 0;
+        int instructions = 0;
         bool isStalled = 0;
         bool checkstallincr = false;
         int ForwardA = 00; //checks for forwarding
