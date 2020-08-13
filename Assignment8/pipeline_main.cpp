@@ -88,4 +88,6 @@ int main(int argc, char *argv[]){
         cout << pipe << "\n\n";
         MIPS.clock++;
     }
+
+    cout<<"IPC : "<<(MIPS.instructions*1.0/MIPS.clock)<<"\n";
 }

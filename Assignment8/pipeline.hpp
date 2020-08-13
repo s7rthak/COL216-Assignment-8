@@ -7,7 +7,7 @@ using namespace std;
 class PipeStage{
     public:
         bool RegDst = 0, ALUOp1 = 0, ALUOp0 = 0, ALUSrc = 0, Jump = 0, Branch = 0, MemRead = 0, MemWrite = 0, RegWrite = 0, MemtoReg = 0;
-        int RegisterRd, RegisterRs, RegisterRt;
+        int RegisterRd = -1, RegisterRs = -1, RegisterRt = -1;
         int Rd = -2, Rs = -1, Rt = -1;
         int PC = -4;
         string instruction = "11111111111111111111111111111111";
@@ -21,6 +21,7 @@ class Pipeline{
     public:   
         PipeStage instructionFetch, instructionDecode, executeInstruction, memoryAccess, writeBack;
         int clock = 0;
+        int instructions = 0;
         int instructionRead = 0;
         bool isStalled = 0;
         bool checkstallincr = false;

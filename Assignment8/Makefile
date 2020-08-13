@@ -1,4 +1,4 @@
-pipeline: pipeline.cpp
+pipeline: pipeline.cpp pipeline_main.cpp
 	g++ -o pipeline pipeline.cpp pipeline_main.cpp
 
 test: pipeline.cpp pipeline_test.cpp

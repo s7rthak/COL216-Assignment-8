@@ -11,14 +11,16 @@ void handleIF(Pipeline& mips, vector<string>& inst_mem){
         IF.toDo = true;
      
         mips.instructionRead += 4;
-    
-        
-        
+        mips.instructions++;
     }else{
         PipeStage p;
         IF = p;
         if(mips.executeInstruction.Jump){
-            mips.instructionRead = mips.executeInstruction.offset * 4;
+            if(mips.executeInstruction.RegisterRs == -1){
+                mips.instructionRead = mips.executeInstruction.offset * 4;
+            }else{
+                mips.instructionRead = mips.executeInstruction.RegisterRs;
+            }
         }else if(mips.memoryAccess.Branch){
             mips.instructionRead = mips.memoryAccess.offset * 4;
         }
@@ -41,7 +43,7 @@ void handleID(Pipeline& mips, vector<int>& registers){
         int checkforjr = stringToDecimal(ID.instruction.substr(26,6));
         if(op == 0 && checkforjr == 8){         //jr
             ID.Jump = 1;
-            ID.offset = registers[ID.Rs];
+            ID.RegisterRs = registers[31];
         }else if(op == 0){                                    // R-type instruction 
             int func = stringToDecimal(ID.instruction.substr(26, 6));
             if(func == 32 || func == 34){
@@ -73,9 +75,7 @@ void handleID(Pipeline& mips, vector<int>& registers){
         }else if(op == 3){              //jal
             ID.Jump = 1;
             ID.offset = stringToDecimal(ID.instruction.substr(6, 26));
-            ID.RegisterRs = ID.PC;
-            ID.RegWrite = 1;
-            ID.Rd = 31;
+            registers[31] = ID.PC + 4;
         }
     }
     mips.executeInstruction = mips.instructionDecode;
@@ -103,6 +103,8 @@ void handleEX(Pipeline& mips){
                 if(EX.RegisterRs == EX.RegisterRt){
 
                     EX.offset = stringToDecimal(EX.instruction.substr(16, 16));
+                }else{
+                    mips.checkstallincr = true;
                 }
             }else if(op == 5){
                 if(EX.RegisterRs != EX.RegisterRt){
@@ -164,6 +166,8 @@ void checkForStall(Pipeline& mips){
     int IFop = stringToDecimal(IF.instruction.substr(0, 6));
     int IDop = stringToDecimal(ID.instruction.substr(0, 6));
     int EXop = stringToDecimal(EX.instruction.substr(0, 6));
+    int IFfunc = stringToDecimal(IF.instruction.substr(26, 6));
+    int IDfunc = stringToDecimal(ID.instruction.substr(26, 6));
     if((EX.Rd == ID.Rs || EX.Rd == ID.Rt) && EX.RegWrite){              // data hazard
         mips.isStalled = true;
     }else if((WB.Rd == EX.Rs || WB.Rd == EX.Rt) && WB.RegWrite){        // data hazard
@@ -176,9 +180,9 @@ void checkForStall(Pipeline& mips){
         mips.isStalled = true;
     }else if(EXop == 4 || EXop == 5 || EXop == 6 || EXop == 7){         // control hazard
         mips.isStalled = true;
-    }else if(IFop == 2){                                                // control hazard
+    }else if(IFop == 2 || IFop == 3 || IFfunc == 8){                    // control hazard
         mips.isStalled = true;
-    }else if(IDop == 2){                                                // control hazard
+    }else if(IDop == 2 || IDop == 3 || IDfunc == 8){                    // control hazard
         mips.isStalled = true;
     }else{
         mips.isStalled = false;
