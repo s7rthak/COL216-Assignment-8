@@ -59,7 +59,7 @@ void handleID(Pipeline& mips, vector<int>& registers){
             ID.RegisterRt = registers[ID.Rt];
             // ID.Rd = ID.Rt;
             if(op == 35){                                       // lw
-                ID.ALUSrc = 1, ID.MemRead = 1, ID.RegWrite = 1, ID.MemtoReg = 1;
+                ID.ALUSrc = 1, ID.MemRead = 1, ID.MemtoReg = 1;
             }else{                                              // sw
                 ID.ALUSrc = 1, ID.MemWrite = 1;
             }
@@ -128,7 +128,9 @@ void handleEX(Pipeline& mips){
             }
         }else if(!EX.ALUOp1 && !EX.ALUOp0){                             // lw/sw
             int offset = stringToDecimal(EX.instruction.substr(16, 16));
-            EX.RegisterRs = EX.RegisterRs + offset;
+            if(EX.MemRead){
+                EX.RegisterRs = EX.RegisterRs + offset;
+            }
         }
     }
     mips.memoryAccess = mips.executeInstruction;
@@ -138,7 +140,7 @@ void handleMEM(Pipeline& mips, vector<int>& memory){
     PipeStage& MEM = mips.memoryAccess;
     if(MEM.toDo){
         if(MEM.MemRead){
-            MEM.RegisterRs = memory[MEM.RegisterRs];
+            MEM.RegisterRt = memory[MEM.RegisterRs];
         }else if(MEM.MemWrite){
             memory[MEM.RegisterRs] = MEM.RegisterRt;
         }
@@ -153,7 +155,7 @@ void handleWB(Pipeline& mips, vector<int>& registers){
         if(WB.RegWrite){
             registers[WB.Rd] = WB.RegisterRs;
         }else if(WB.MemtoReg){
-            registers[WB.Rd] = WB.RegisterRs;
+            registers[WB.Rt] = WB.RegisterRt;
         }
     }
 }
@@ -184,7 +186,7 @@ void stallAtIF(Pipeline& mips){
     }
 }
 
-bool stallAtEX(Pipeline& mips, vector<int>& registers){
+bool stallAtEX(Pipeline& mips, vector<int> registers){
     PipeStage& IF = mips.instructionFetch;
     PipeStage& EX = mips.executeInstruction;
     PipeStage& MEM = mips.memoryAccess;

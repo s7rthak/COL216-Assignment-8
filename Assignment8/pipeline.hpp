@@ -33,6 +33,6 @@ void handleEX(Pipeline& mips);
 void handleMEM(Pipeline& mips, vector<int>& memory);
 void handleWB(Pipeline& mips, vector<int>& registers);
 void stallAtIF(Pipeline& mips);
-bool stallAtEX(Pipeline& mips, vector<int>& registers);
+bool stallAtEX(Pipeline& mips, vector<int> registers);
 
 #endif
