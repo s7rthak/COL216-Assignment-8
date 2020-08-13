@@ -29,18 +29,29 @@ int main(int argc, char *argv[]){
     int i=0;
     while(MIPS.instructionRead < (signed)instructionMemory.size()){
         string pipe;
-        checkForStall(MIPS);
-        handleWB(MIPS, registerFile);
-        pipe = to_string(MIPS.writeBack.PC/4) + " " + pipe;
-        handleMEM(MIPS, Memory);
-        pipe = to_string(MIPS.memoryAccess.PC/4) + " " + pipe;
-        handleEX(MIPS);
-        pipe = to_string(MIPS.executeInstruction.PC/4) + " " + pipe;
-        handleID(MIPS, registerFile);
-        pipe = to_string(MIPS.instructionDecode.PC/4) + " " + pipe;
-        handleIF(MIPS, instructionMemory);
-        pipe = to_string(MIPS.instructionFetch.PC/4) + " " + pipe;
-
+        stallAtIF(MIPS);
+        if(stallAtEX(MIPS, registerFile)){
+            handleWB(MIPS, registerFile);
+            pipe = to_string(MIPS.writeBack.PC/4) + " " + pipe;
+            handleMEM(MIPS, Memory);
+            pipe = to_string(MIPS.memoryAccess.PC/4) + " " + pipe;
+            handleEX(MIPS);
+            pipe = to_string(MIPS.executeInstruction.PC/4) + " " + pipe;
+            MIPS.executeInstruction = PipeStage();
+            pipe = to_string(MIPS.instructionDecode.PC/4) + " " + pipe;
+            pipe = to_string(MIPS.instructionFetch.PC/4 + 1) + " " + pipe;
+        }else{
+            handleWB(MIPS, registerFile);
+            pipe = to_string(MIPS.writeBack.PC/4) + " " + pipe;
+            handleMEM(MIPS, Memory);
+            pipe = to_string(MIPS.memoryAccess.PC/4) + " " + pipe;
+            handleEX(MIPS);
+            pipe = to_string(MIPS.executeInstruction.PC/4) + " " + pipe;
+            handleID(MIPS, registerFile);
+            pipe = to_string(MIPS.instructionDecode.PC/4) + " " + pipe;
+            handleIF(MIPS, instructionMemory);
+            pipe = to_string(MIPS.instructionFetch.PC/4) + " " + pipe;
+        }
         for(int i=0; i<registerFile.size(); i++)
         {
             cout << "$" << i << " " << registerFile[i] << endl;
@@ -88,6 +99,7 @@ int main(int argc, char *argv[]){
         cout << pipe << "\n\n";
         MIPS.clock++;
     }
-
+    cout<<"Clock : "<<MIPS.clock<<" cycles\n";
+    cout<<"Instructions : "<<MIPS.instructions<<"\n";
     cout<<"IPC : "<<(MIPS.instructions*1.0/MIPS.clock)<<"\n";
 }

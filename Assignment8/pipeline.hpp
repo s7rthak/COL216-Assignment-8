@@ -32,6 +32,7 @@ void handleID(Pipeline& mips, vector<int>& registers);
 void handleEX(Pipeline& mips);
 void handleMEM(Pipeline& mips, vector<int>& memory);
 void handleWB(Pipeline& mips, vector<int>& registers);
-void checkForStall(Pipeline& mips);
+void stallAtIF(Pipeline& mips);
+bool stallAtEX(Pipeline& mips, vector<int>& registers);
 
 #endif

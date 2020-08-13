@@ -56,7 +56,8 @@ void handleID(Pipeline& mips, vector<int>& registers){
             ID.RegDst = 1, ID.ALUOp1 = 1, ID.RegWrite = 1;       
         }else if(op == 35 || op == 43){                 // I-type instruction (lw/sw)
             ID.RegisterRs = registers[ID.Rs]; 
-            ID.Rd = ID.Rt;
+            ID.RegisterRt = registers[ID.Rt];
+            // ID.Rd = ID.Rt;
             if(op == 35){                                       // lw
                 ID.ALUSrc = 1, ID.MemRead = 1, ID.RegWrite = 1, ID.MemtoReg = 1;
             }else{                                              // sw
@@ -157,7 +158,7 @@ void handleWB(Pipeline& mips, vector<int>& registers){
     }
 }
 
-void checkForStall(Pipeline& mips){
+void stallAtIF(Pipeline& mips){
     PipeStage& IF = mips.instructionFetch;
     PipeStage& ID = mips.instructionDecode;
     PipeStage& EX = mips.executeInstruction;
@@ -168,13 +169,7 @@ void checkForStall(Pipeline& mips){
     int EXop = stringToDecimal(EX.instruction.substr(0, 6));
     int IFfunc = stringToDecimal(IF.instruction.substr(26, 6));
     int IDfunc = stringToDecimal(ID.instruction.substr(26, 6));
-    if((EX.Rd == ID.Rs || EX.Rd == ID.Rt) && EX.RegWrite){              // data hazard
-        mips.isStalled = true;
-    }else if((WB.Rd == EX.Rs || WB.Rd == EX.Rt) && WB.RegWrite){        // data hazard
-        mips.isStalled = true;
-    }else if(WB.Rt == EX.Rs && WB.MemtoReg){                            // data hazard
-        mips.isStalled = true;
-    }else if(IFop == 4 || IFop == 5 || IFop == 6 || IFop == 7){         // control hazard
+    if(IFop == 4 || IFop == 5 || IFop == 6 || IFop == 7){         // control hazard
         mips.isStalled = true;
     }else if(IDop == 4 || IDop == 5 || IDop == 6 || IDop == 7){         // control hazard
         mips.isStalled = true;
@@ -187,4 +182,70 @@ void checkForStall(Pipeline& mips){
     }else{
         mips.isStalled = false;
     }
+}
+
+bool stallAtEX(Pipeline& mips, vector<int>& registers){
+    PipeStage& IF = mips.instructionFetch;
+    PipeStage& EX = mips.executeInstruction;
+    PipeStage& MEM = mips.memoryAccess;
+    PipeStage& WB = mips.writeBack;
+    PipeStage ID = mips.instructionDecode;
+    // ID.PC = mips.instructionDecode.PC, ID.instruction = mips.instructionDecode.instruction, ID.toDo = mips.instructionDecode.toDo;
+    if(ID.toDo){
+        int op = stringToDecimal(ID.instruction.substr(0, 6));
+        ID.Rs = stringToDecimal(ID.instruction.substr(6, 5));
+        ID.Rt = stringToDecimal(ID.instruction.substr(11, 5));
+        ID.Rd = stringToDecimal(ID.instruction.substr(16, 5));
+        int checkforjr = stringToDecimal(ID.instruction.substr(26,6));
+        if(op == 0 && checkforjr == 8){         //jr
+            ID.Jump = 1;
+            ID.RegisterRs = registers[31];
+        }else if(op == 0){                                    // R-type instruction 
+            int func = stringToDecimal(ID.instruction.substr(26, 6));
+            if(func == 32 || func == 34){
+                ID.RegisterRs = registers[ID.Rs];
+                ID.RegisterRt = registers[ID.Rt];
+                // cout << "Register values: " <<  ID.RegisterRs << " " << ID.RegisterRt << endl;
+            }else if(func == 0 || func == 2){
+                ID.RegisterRt = registers[ID.Rt];
+            }
+            ID.RegDst = 1, ID.ALUOp1 = 1, ID.RegWrite = 1;       
+        }else if(op == 35 || op == 43){                 // I-type instruction (lw/sw)
+            ID.RegisterRs = registers[ID.Rs]; 
+            ID.Rd = ID.Rt;
+            if(op == 35){                                       // lw
+                ID.ALUSrc = 1, ID.MemRead = 1, ID.RegWrite = 1, ID.MemtoReg = 1;
+            }else{                                              // sw
+                ID.ALUSrc = 1, ID.MemWrite = 1;
+            }
+        }else if(op == 4 || op == 5){
+            ID.RegisterRs = registers[ID.Rs];
+            ID.RegisterRt = registers[ID.Rt];
+            ID.Branch = 1;
+        }else if(op == 6 || op == 7){
+            ID.RegisterRs = registers[ID.Rs];
+            ID.Branch = 1;
+        }else if(op == 2){
+            ID.Jump = 1;
+            ID.offset = stringToDecimal(ID.instruction.substr(6, 26));
+        }else if(op == 3){              //jal
+            ID.Jump = 1;
+            ID.offset = stringToDecimal(ID.instruction.substr(6, 26));
+            registers[31] = ID.PC + 4;
+        }
+    }
+    if((EX.Rd == ID.Rs || EX.Rd == ID.Rt) && EX.RegWrite){
+        return true;
+    }else if((MEM.Rd == ID.Rs || MEM.Rd == ID.Rt) && MEM.RegWrite){
+        return true;
+    }else if((WB.Rd == ID.Rs || WB.Rd == ID.Rt) && WB.RegWrite){
+        return true;
+    }else if((EX.Rt == ID.Rs || EX.Rt == ID.Rt) && EX.MemtoReg){
+        return true;
+    }else if((MEM.Rt == ID.Rs || MEM.Rt == ID.Rt) && MEM.MemtoReg){
+        return true;
+    }else if((WB.Rt == ID.Rs || WB.Rt == ID.Rt) && WB.MemtoReg){
+        return true;
+    }
+    return false;
 }
