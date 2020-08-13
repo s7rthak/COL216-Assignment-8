@@ -211,9 +211,8 @@ void checkForStall(Pipeline& mips){
     {
         mips.ForwardB = 01;
     }
-    if((EX.Rd == ID.Rs || EX.Rd == ID.Rt) && EX.RegWrite){              // data hazard
-        mips.isStalled = true;
-    }if(EX.MemRead && (EX.Rd == ID.Rs || EX.Rd == ID.Rt)){               // taking Rs = Rs1 and Rt = Rs2 according to book
+    
+    if(EX.MemRead && (EX.Rd == ID.Rs || EX.Rd == ID.Rt)){               // taking Rs = Rs1 and Rt = Rs2 according to book
         mips.isStalled = true;                                          // data hazard after load needs stalling as it can't be solved by forwarding
     }else if(IFop == 4 || IFop == 5 || IFop == 6 || IFop == 7){         // control hazard
         mips.isStalled = true;
