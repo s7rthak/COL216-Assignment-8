@@ -1,1 +1,2 @@
 
+1.txt: Checks all R-type, lw/sw, branch and jump instruction. checks for stall in case of jump.
